@@ -26,12 +26,17 @@ class GoldenHeadListener(private val plugin: JavaPlugin) : Listener {
         val item = event.item
 
         if (event.action == Action.RIGHT_CLICK_BLOCK || event.action == Action.RIGHT_CLICK_AIR) {
-            if (item != null && PDCUtil.get(
-                    item,
-                    PDCEntryUtil.PDCKey(plugin).itemIdentifierKey,
-                    PersistentDataType.STRING
-                ) == PDCEntryUtil.PDCValue().goldenHeadItemIdentifier
-            ) {
+            if (item == null) return
+            val identifier = PDCUtil.get(
+                item,
+                PDCEntryUtil.PDCKey(plugin).itemIdentifierKey,
+                PersistentDataType.STRING
+            )
+
+            val isGoldenHead = identifier == PDCEntryUtil.PDCValue().goldenHeadItemIdentifier
+            val isEnchantedGoldenHead = identifier == PDCEntryUtil.PDCValue().enchantedGoldenHeadItemIdentifier
+
+            if (isGoldenHead || isEnchantedGoldenHead) {
                 event.isCancelled = true
 
                 val now = System.currentTimeMillis()
@@ -41,48 +46,31 @@ class GoldenHeadListener(private val plugin: JavaPlugin) : Listener {
 
                 player.playSound(Sound.sound(Key.key("minecraft:entity.player.burp"), Sound.Source.MASTER, 1.0f, 1.0f))
 
-                val healthRegenEffect = PotionEffect(
-                    PotionEffectType.REGENERATION,
-                    100,
-                    2,
-                    false,
-                    false
-                )
-                val absorptionEffect = PotionEffect(
-                    PotionEffectType.ABSORPTION,
-                    1200,
-                    3,
-                    false,
-                    false
-                )
-                val strengthEffect = PotionEffect(
-                    PotionEffectType.STRENGTH,
-                    1200,
-                    1,
-                    false,
-                    false
-                )
-                val saturationEffect = PotionEffect(
-                    PotionEffectType.SATURATION,
-                    100,
-                    1,
-                    false,
-                    false
-                )
+                if (isGoldenHead) {
+                    // Golden Apple effects: Regeneration II (5s), Absorption I (2m)
+                    // Request: 2x duration
+                    // Regen II: 5s * 20 * 2 = 200 ticks
+                    // Absorption I: 2m * 60 * 20 * 2 = 4800 ticks
+                    player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 200, 1, false, false))
+                    player.addPotionEffect(PotionEffect(PotionEffectType.ABSORPTION, 4800, 0, false, false))
+                } else {
+                    // Enchanted Golden Apple effects: Regeneration II (20s), Absorption IV (2m), Resistance I (5m), Fire Resistance I (5m)
+                    // Request: 2x duration
+                    // Regen II: 20s * 20 * 2 = 800 ticks
+                    // Absorption IV: 2m * 60 * 20 * 2 = 4800 ticks
+                    // Resistance I: 5m * 60 * 20 * 2 = 12000 ticks
+                    // Fire Resistance I: 5m * 60 * 20 * 2 = 12000 ticks
+                    player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 800, 1, false, false))
+                    player.addPotionEffect(PotionEffect(PotionEffectType.ABSORPTION, 4800, 3, false, false))
+                    player.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, 12000, 0, false, false))
+                    player.addPotionEffect(PotionEffect(PotionEffectType.FIRE_RESISTANCE, 12000, 0, false, false))
+                }
 
-                player.addPotionEffect(healthRegenEffect)
-                player.addPotionEffect(absorptionEffect)
-                player.addPotionEffect(strengthEffect)
-                player.addPotionEffect(saturationEffect)
+                // Add saturation as well (Golden Apple gives some)
+                player.addPotionEffect(PotionEffect(PotionEffectType.SATURATION, 100, 1, false, false))
 
                 if (player.gameMode == GameMode.CREATIVE) return
-                val usedItem = event.item ?: return
-                val newAmount = usedItem.amount - 1
-                if (newAmount <= 0) {
-                    event.player.inventory.setItem(event.hand!!, null)
-                } else {
-                    usedItem.amount = newAmount
-                }
+                item.subtract(1)
             }
         }
     }

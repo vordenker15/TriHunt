@@ -17,6 +17,7 @@ import net.trilleo.mc.plugins.trihunt.utils.TeamUtil
 import net.trilleo.mc.plugins.trihunt.utils.sendPrefixed
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import java.util.Random
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
@@ -62,30 +63,60 @@ class GameManager(private val plugin: JavaPlugin) {
 
         serverData.set("gameStatus", "ready")
 
-        for (player in plugin.server.onlinePlayers) {
-            player.closeInventory()
+        // World reset logic
+        val seedMode = serverData.getString("seedMode", "RANDOM")
+        val customSeed = serverData.getString("customSeed", "")
+        val lastUsedSeed = serverData.getString("lastUsedSeed", "")
 
-            updatePluginItem(player)
-            updatePlayerGameMode(player)
-            updatePlayerEffects(player)
+        val seedToUse: Long? = when (seedMode) {
+            "RANDOM" -> {
+                val seed = Random().nextLong()
+                serverData.set("lastUsedSeed", seed.toString())
+                seed
+            }
+            "SAME" -> {
+                if (lastUsedSeed.isNotEmpty()) lastUsedSeed.toLongOrNull() else {
+                    val seed = Random().nextLong()
+                    serverData.set("lastUsedSeed", seed.toString())
+                    seed
+                }
+            }
+            "CUSTOM" -> {
+                val seed = customSeed.toLongOrNull() ?: customSeed.hashCode().toLong()
+                serverData.set("lastUsedSeed", seed.toString())
+                seed
+            }
+            else -> null
         }
 
-        for (player in plugin.server.onlinePlayers) {
-            player.playSound(
-                Sound.sound(
-                    Key.key("minecraft:entity.experience_orb.pickup"),
-                    Sound.Source.MASTER,
-                    1f,
-                    1f
+        WorldManager(plugin).resetWorlds(seedToUse) { overworld ->
+            for (player in plugin.server.onlinePlayers) {
+                player.teleport(overworld.spawnLocation)
+                player.closeInventory()
+
+                updatePluginItem(player)
+                updatePlayerGameMode(player)
+                updatePlayerEffects(player)
+            }
+
+            for (player in plugin.server.onlinePlayers) {
+                player.playSound(
+                    Sound.sound(
+                        Key.key("minecraft:entity.experience_orb.pickup"),
+                        Sound.Source.MASTER,
+                        1f,
+                        1f
+                    )
                 )
-            )
-            if (TeamUtil.isInTeam(player, "speedrunner")) {
-                player.sendPrefixed("<green>Game is ready! <yellow>Punch a hunter <green>to start / <yellow>Crouch <green>to cancel")
-            } else {
-                player.sendPrefixed("<green>Game is ready! Wait for starting...")
+                if (TeamUtil.isInTeam(player, "speedrunner")) {
+                    player.sendPrefixed("<green>Game is ready! <yellow>Punch a hunter <green>to start / <yellow>Crouch <green>to cancel")
+                } else {
+                    player.sendPrefixed("<green>Game is ready! Wait for starting...")
+                }
             }
         }
     }
+
 
     fun cancelGame() {
         val serverData = ServerDataManager.get()
