@@ -5,6 +5,7 @@ import net.trilleo.mc.plugins.trihunt.data.PlayerDataManager
 import net.trilleo.mc.plugins.trihunt.data.ServerDataManager
 import net.trilleo.mc.plugins.trihunt.managers.GameManager
 import net.trilleo.mc.plugins.trihunt.managers.TeamManager
+import net.trilleo.mc.plugins.trihunt.managers.WorldManager
 import net.trilleo.mc.plugins.trihunt.registration.*
 import net.trilleo.mc.plugins.trihunt.utils.MessageUtil
 import org.bukkit.plugin.java.JavaPlugin
@@ -43,6 +44,9 @@ class Main : JavaPlugin() {
         GUIManager.registerAll(this)
         logger.info("Registering tasks...")
         TaskRegistrar.registerAll(this)
+
+        // Initialize worlds
+        WorldManager(this).ensureLobbyPlatform()
 
         // Initialize teams
         TeamManager.initializeTeam()

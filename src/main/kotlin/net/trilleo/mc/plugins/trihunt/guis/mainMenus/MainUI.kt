@@ -34,6 +34,7 @@ class MainUI(private val plugin: JavaPlugin) : PluginGUI(
         "settingsButtonSlot" to 11,
         "teamSelectButtonSlot" to 31,
         "recipeBookButtonSlot" to 53,
+        "worldSettingsButtonSlot" to 40,
         "closeButtonSlot" to 49
     )
 
@@ -97,12 +98,22 @@ class MainUI(private val plugin: JavaPlugin) : PluginGUI(
                 "<dark_gray>====================="
             )
         }
+        val worldSettingsButton = itemStack(Material.GRASS_BLOCK) {
+            name("<bold><green>World Settings")
+            lore(
+                " ",
+                "<dark_gray>=====================",
+                "<gray>Manage world and seed settings",
+                "<dark_gray>====================="
+            )
+        }
 
         inventory.setItem(slotIndex.getValue("startButtonSlot"), startButton)
         inventory.setItem(slotIndex.getValue("creditsButtonSlot"), creditsButton)
         inventory.setItem(slotIndex.getValue("settingsButtonSlot"), settingsButton)
         inventory.setItem(slotIndex.getValue("teamSelectButtonSlot"), teamSelectButton)
         inventory.setItem(slotIndex.getValue("recipeBookButtonSlot"), recipeBookButton)
+        inventory.setItem(slotIndex.getValue("worldSettingsButtonSlot"), worldSettingsButton)
         inventory.setItem(slotIndex.getValue("closeButtonSlot"), closeButton)
     }
 
@@ -129,6 +140,9 @@ class MainUI(private val plugin: JavaPlugin) : PluginGUI(
         }
         if (event.slot == slotIndex.getValue("recipeBookButtonSlot")) {
             GUIManager.open(player, "recipe-book")
+        }
+        if (event.slot == slotIndex.getValue("worldSettingsButtonSlot")) {
+            GUIManager.open(player, "world-settings")
         }
         if (event.slot == slotIndex.getValue("startButtonSlot")) {
             player.closeInventory()
