@@ -33,6 +33,9 @@ class PDCEntryUtil {
         // itemIdentifier - Golden Head
         val goldenHeadItemIdentifier = "golden-head"
 
+        // itemIdentifier - Enchanted Golden Head
+        val enchantedGoldenHeadItemIdentifier = "enchanted-golden-head"
+
         // itemIdentifier - Silex
         val silexItemIdentifier = "silex"
 
